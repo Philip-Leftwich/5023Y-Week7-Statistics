@@ -504,7 +504,6 @@ Challenger %>%
 ggplot(aes(y=oring_dt, x=temp))+geom_point()+
   ggtitle("Temperature on flight launches where an O-ring incident occurred")
 ```
-From this it was concluded that temperature did not appear to affect o-ring risk of failure, as o-ring failures were detected at a range of .
 
 
 From this it was concluded that temperature did not appear to affect o-ring risk of failure, as o-ring failures were detected at a range of different temperatures.
