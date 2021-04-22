@@ -253,7 +253,7 @@ Overdispersion can be diagnosed by $\frac{residual~deviance}{residual~degrees~of
 
 Overdispersion statistic values **>1 = Overdispersed**
 
-Overdispersion as a result of larger than expected variance can affect our ability to calculate confidence intervals. 
+Overdispersion as a result of larger than expected variance can affect our ability to calculate **confidence intervals**. 
 
 Luckily a simple fix is to fit a *quasi-likelihood* model which accounts for this. 
 
@@ -261,7 +261,7 @@ Luckily a simple fix is to fit a *quasi-likelihood* model which accounts for thi
 count_model <- glm(Beg ~ Mass+Species+Mass:Species, data=cuckoo, family=quasipoisson(link="log"))
 
 ```
-As you can see, while none of the estimates have changed, the standard errors (and therefore our confidence intervals) have. Because of this change in the confidence of our estimates. The interaction effect appears to no longer be significant, now that we have more reliable standard error.
+As you can see, while none of the estimates have changed, the standard errors (and therefore our confidence intervals) have. Because of this change in the confidence of our estimates. The interaction effect appears to **no longer be significant**, now that we have more reliable standard error.
 
 ## 2.5 Summary ANOVA tables
 
@@ -285,28 +285,26 @@ kableExtra::kbl() %>%
   kableExtra::kable_minimal()
 ```
 
-It would appear we **cannot** drop the interaction term *without* significantly affecting the fit of our model.
-
-So we will keep this as our model
+It would appear we **can** drop the interaction term *without* significantly affecting the fit of our model.
 
 
-<details><summary>Q. If we have a model with interactions in it, which Sum of Squares should we use to report? Type 1, II or III?</summary>
+<details><summary>Q. If we have a model withoyt interactions in it, which Sum of Squares should we use to report? Type 1, II or III?</summary>
 
 Type I - compare the effect of removing an interaction or main effect from a model - useful for justifying model simplification.
 
-Type II - Most accurate for describing a model with main effects only.
+**Type II - Most accurate for describing a model with main effects only.**
 
-**Type III - Most accurate for describing main effects and interactions when there is an interaction term in the model.** 
+Type III - Most accurate for describing main effects and interactions when there is an interaction term in the model.** 
 
 ```{r, eval=FALSE}
 ### anova() and aov() both use type I
 
-car::Anova(count_model, type="III") ### car::Anova can do Type II or Type III
+car::Anova(main_effect_count_model, type="II") ### car::Anova can do Type II or Type III
       
 ```
 
 ```{r, echo=FALSE}
-car::Anova(count_model, type="III") %>% 
+car::Anova(main_effect_count_model, type="II") %>% 
   kableExtra::kbl() %>% 
   kableExtra::kable_minimal() 
 ```
@@ -325,7 +323,8 @@ I hypothesised that the way in which mass influences begging calls would vary by
 
 To test this hypothesis I compared body mass in grams as a continuous variable and species (Warbler or Cuckoo) as a factorial predictor, and an interaction term of these two predictors to the rate of begging calls as a count across a six second observation period. This was fitted as a generalised linear model with a poisson error distribution and a "log-link" to the response variable. A quasi-likelihood model was fitted to account for over-dispersion. 
 
-I found that there was a significant interaction effect of Mass and Species ($\chi^2$ ~1,54 = 11.76, *P* = >0.001), suggesting that the relationship between increasing mass and the rate of begging is broadly the same across both species. 
+I found that there was no significant interaction effect of Mass and Species ($\chi^2$ ~1,54 = 11.76, *P* = 0.22), suggesting that the relationship between increasing mass and the rate of begging is broadly the same across both species. 
+
 
 </details>
 
@@ -334,13 +333,12 @@ I found that there was a significant interaction effect of Mass and Species ($\c
 Remember that not only is this **Poisson** model fitting variance using a Poisson and not Normal distribution. It is also relating the predictors to the response variable with a "*log-link*" this means we need to exponentiate our estimates to get them on the same scale as the response (y) variable. Until you do this all the model estimates are logn(y).
 
 ```{r}
-exp(coef(count_model)[1]) ### Intercept - Incidence rate at x=0
+exp(coef(main_effect_count_model)[1]) ### Intercept - Incidence rate at x=0
 
-exp(coef(count_model)[2]) ### Change in the incidence rate with Mass
+exp(coef(main_effect_count_model)[2]) ### Change in the incidence rate with Mass
 
-exp(coef(count_model)[3]) ### Change in the incidence rate intercept by Species
+exp(coef(main_effect_count_model)[3]) ### Change in the incidence rate intercept by Species
 
-exp(coef(count_model)[4])
 
 ```
 
@@ -348,14 +346,14 @@ Luckily when you tidy your models up with `broom` you can specify that you want 
 
 
 ```{r, eval=FALSE}
-broom::tidy(count_model, 
+broom::tidy(main_effect_count_model, 
             exponentiate=T, 
             conf.int=T)
 
 ```
 
 ```{r, echo=FALSE}
-broom::tidy(count_model, 
+broom::tidy(main_effect_count_model, 
             exponentiate=T, 
             conf.int=T) %>% 
     kableExtra::kbl() %>% 
@@ -364,11 +362,11 @@ broom::tidy(count_model,
 
 
 ```{r, eval=FALSE}
-broom::glance(count_model)
+broom::glance(main_effect_count_model)
 ```
 
 ```{r, echo=FALSE}
-broom::glance(count_model) %>% 
+broom::glance(main_effect_count_model) %>% 
       kableExtra::kbl() %>% 
   kableExtra::kable_minimal()
 ```
@@ -376,7 +374,7 @@ broom::glance(count_model) %>%
 We can use `broom::augment()` to plot the regression lines for each species. We have to specify we want our fitted values to be on the "response" scale otherwise it will default to the "log-link". 
 
 ```{r}
-broom::augment(count_model, cuckoo, type.predict="response") %>% 
+broom::augment(main_effect_count_model, cuckoo, type.predict="response") %>% 
   ggplot(aes(x=Mass,
              y=Beg,
              colour=Species))+
@@ -396,9 +394,9 @@ Remember when report Incidence Rates and Confidence Intervals we capture effect 
 
 We can use these to talk about the biology which underpins our analyses e.g.
 
-<details><summary> Mass 1.06 (95%CI: 1.05-1.06) </summary>
+<details><summary> Mass 1.06 (95%CI: 1.05-1.07) </summary>
 
-For every gram of bodyweight gained by a **cuckoo chick** there was an average increase of 1.06 in the rate of begging calls per six seconds. 
+For every gram of bodyweight gained by a chick there was an average increase of 1.06 in the rate of begging calls per six seconds. 
 
 or
 
@@ -406,25 +404,19 @@ On average begging rates go up as chicks get heavier
 
 </details>
 
-<details><summary> SpeciesWarbler 0.59 (95%CI: 0.43-0.8) </summary>
+<details><summary> SpeciesWarbler 0.96 (95%CI: 0.67-1.38) </summary>
 
-Warblers had an average call rate that was *at least* 0.67 higher than that of a Cuckoo of an equivalent weight 
+Warblers had produce an average of 0.96 more calls per six seconds than Cuckoos, however this was not statistically significant in our analysis $\chi^2$_1_54 = 11.76, P = 0.22
 
-</details>
-
-<details><summary> Mass:SpeciesWarbler 1.02 (95%CI: 1-1.023) </summary>
-
-Warbler's increased their *call-rate* relative to body weight *faster* than cuckoo's. Such that for every gram of weight gained Warbler's add one extra begging call (compared to the increase in cuckoos) to the six-second observation period. 
-
-This accounts for the steeper curve in the warbler begging rate - but note how the warblers clearly leave the nest at a much lower body mass, while the cuckoos continue to beg and grow ultimately much larger! 
-
-Perhaps the steeper rate in begging reflects the faster maturity of the warbler chicks?
 
 </details>
 
 
-Include these with the F statistics generated from your ANOVA tables, optionally along with R^2^ (total variance explained by the model) - and you have a comprehensive results write-up. 
+Include these with the Chi statistics generated from your ANOVA tables - and you have a comprehensive results write-up. 
 
+> *Note*
+>
+> Anova tables for poisson and binomial models use Chi not F because they are odds models not least squares models
 
 ### 2.8.1 Final thoughts on GLM Poisson
 
